@@ -64,8 +64,6 @@
 #include <string.h>
 #include <math.h>
 
-#include <ldg.h>
-
 #include <ft2build.h>
 #include FT_FREETYPE_H
 #include FT_OTSVG_H
@@ -89,7 +87,7 @@ typedef struct {
 
 static FT_Error plutosvg_ft_init(FT_Pointer* ft_state)
 {
-    plutosvg_ft_state_t* state = (plutosvg_ft_state_t*)ldg_Malloc(sizeof(plutosvg_ft_state_t));
+    plutosvg_ft_state_t* state = (plutosvg_ft_state_t*)malloc(sizeof(plutosvg_ft_state_t));
     memset(state, 0, sizeof(plutosvg_ft_state_t));
     *ft_state = state;
     return FT_Err_Ok;
@@ -100,7 +98,7 @@ static void plutosvg_ft_free(FT_Pointer* ft_state)
     plutosvg_ft_state_t* state = (plutosvg_ft_state_t*)(*ft_state);
     for(FT_ULong i = 0; i < state->num_entries; ++i)
         plutosvg_document_destroy(state->entries[i].document);
-    ldg_Free(state);
+    free(state);
 }
 
 #define PLUTOSVG_FT_PALETTE_INDEX 0
