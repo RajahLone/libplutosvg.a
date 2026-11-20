@@ -7,8 +7,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <ldg.h>
-
 int plutosvg_version(void)
 {
     return PLUTOSVG_VERSION;
@@ -259,7 +257,7 @@ typedef struct {
 
 static heap_t* heap_create(void)
 {
-    heap_t* heap = ldg_Malloc(sizeof(heap_t));
+    heap_t* heap = malloc(sizeof(heap_t));
     heap->chunk = NULL;
     heap->size = 0;
     return heap;
@@ -272,7 +270,7 @@ static void* heap_alloc(heap_t* heap, size_t size)
 {
     size = ALIGN_SIZE(size);
     if(heap->chunk == NULL || heap->size + size > CHUNK_SIZE) {
-        heap_chunk_t* chunk = ldg_Malloc(CHUNK_SIZE + sizeof(heap_chunk_t));
+        heap_chunk_t* chunk = malloc(CHUNK_SIZE + sizeof(heap_chunk_t));
         chunk->next = heap->chunk;
         heap->chunk = chunk;
         heap->size = 0;
@@ -288,10 +286,10 @@ static void heap_destroy(heap_t* heap)
     while(heap->chunk) {
         heap_chunk_t* chunk = heap->chunk;
         heap->chunk = chunk->next;
-        ldg_Free(chunk);
+        free(chunk);
     }
 
-    ldg_Free(heap);
+    free(heap);
 }
 
 typedef struct hashmap_entry {
@@ -309,8 +307,8 @@ typedef struct {
 
 static hashmap_t* hashmap_create(void)
 {
-    hashmap_t* map = ldg_Malloc(sizeof(hashmap_t));
-    map->buckets = ldg_Calloc(16, sizeof(hashmap_entry_t*));
+    hashmap_t* map = malloc(sizeof(hashmap_t));
+    map->buckets = calloc(16, sizeof(hashmap_entry_t*));
     map->size = 0;
     map->capacity = 16;
     return map;
@@ -345,7 +343,7 @@ static void hashmap_expand(hashmap_t* map)
 {
     if(map->size > (map->capacity * 3 / 4)) {
         size_t newcapacity = map->capacity << 1;
-        hashmap_entry_t** newbuckets = ldg_Calloc(newcapacity, sizeof(hashmap_entry_t*));
+        hashmap_entry_t** newbuckets = calloc(newcapacity, sizeof(hashmap_entry_t*));
         for(size_t i = 0; i < map->capacity; i++) {
             hashmap_entry_t* entry = map->buckets[i];
             while(entry) {
@@ -357,7 +355,7 @@ static void hashmap_expand(hashmap_t* map)
             }
         }
 
-        ldg_Free(map->buckets);
+        free(map->buckets);
         map->buckets = newbuckets;
         map->capacity = newcapacity;
     }
@@ -412,8 +410,8 @@ static void hashmap_destroy(hashmap_t* map)
 {
     if(map == NULL)
         return;
-    ldg_Free(map->buckets);
-    ldg_Free(map);
+    free(map->buckets);
+    free(map);
 }
 
 static inline const string_t* find_attribute(const element_t* element, int id, bool inherit)
@@ -1154,7 +1152,7 @@ struct plutosvg_document {
 
 static plutosvg_document_t* plutosvg_document_create(float width, float height, plutovg_destroy_func_t destroy_func, void* closure)
 {
-    plutosvg_document_t* document = ldg_Malloc(sizeof(plutosvg_document_t));
+    plutosvg_document_t* document = malloc(sizeof(plutosvg_document_t));
     document->heap = heap_create();
     document->path = plutovg_path_create();
     document->id_cache = NULL;
@@ -1175,7 +1173,7 @@ void plutosvg_document_destroy(plutosvg_document_t* document)
     heap_destroy(document->heap);
     if(document->destroy_func)
         document->destroy_func(document->closure);
-    ldg_Free(document);
+    free(document);
 }
 
 static void add_attribute(element_t* element, plutosvg_document_t* document, int id, const char* data, size_t length)
@@ -1498,7 +1496,7 @@ static bool plutosvg_load_file(const char* filename, char** data, long* length)
         goto cleanup;
     }
 
-    content = ldg_Malloc(size);
+    content = malloc(size);
     if(content == NULL) {
         goto cleanup;
     }
@@ -1514,7 +1512,7 @@ static bool plutosvg_load_file(const char* filename, char** data, long* length)
 
 cleanup:
     fclose(stream);
-    ldg_Free(content);
+    free(content);
     return success;
 }
 
@@ -1524,7 +1522,7 @@ plutosvg_document_t* plutosvg_document_load_from_file(const char* filename, floa
     long length = 0L;
     if(!plutosvg_load_file(filename, &data, &length))
         return NULL;
-    return plutosvg_document_load_from_data(data, length, width, height, (plutovg_destroy_func_t)ldg_Free, data);
+    return plutosvg_document_load_from_data(data, length, width, height, free, data);
 }
 
 typedef enum render_mode {
